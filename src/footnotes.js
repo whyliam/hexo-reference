@@ -19,6 +19,18 @@ function renderFootnotes(text) {
 
     var html = '';
     var global_index = 0;
+    
+    // 添加响应式样式，只在第一次调用时添加
+    var styleInjected = false;
+    if (!global.footnoteStyleInjected) {
+        html += '<style>';
+        html += '@media (max-width: 767px) {';
+        html += '[class*=hint--]:after, [class*=hint--]:before { display: none !important; }';
+        html += '}';
+        html += '</style>';
+        global.footnoteStyleInjected = true;
+        styleInjected = true;
+    }
 
     // create map for looking footnotes array
     function createLookMap(field) {
@@ -74,10 +86,12 @@ function renderFootnotes(text) {
             }
 
             var tooltip = indexMap[index].content;
+            // 先渲染 markdown 为 HTML，然后去除 HTML 标签，只保留文本内容
+            var renderedTooltip = md.renderInline(tooltip.trim()).replace(/<[^>]*>/g, '');
             return '<sup id="fnref:' + index + '">' +
                 '<a href="#fn:'+ index +'" rel="footnote">' +
                 '<span class="hint--top hint--error hint--medium hint--rounded hint--bounce" aria-label="'
-                + tooltip +
+                + renderedTooltip +
                 '">[' + index +']</span></a></sup>';
     });
 
@@ -108,7 +122,13 @@ function renderFootnotes(text) {
     // add footnotes at the end of the content
     if (footnotes.length) {
         text += '<div id="footnotes">';
-        text += '<hr>';
+        if (!styleInjected) {
+            text += '<style>';
+            text += '@media (max-width: 767px) {';
+            text += '[class*=hint--]:after, [class*=hint--]:before { display: none !important; }';
+            text += '}';
+            text += '</style>';
+        }
         text += '<div id="footnotelist">';
         text += '<ol style="list-style: none; padding-left: 0; margin-left: 40px">' + html + '</ol>';
         text += '</div></div>';
