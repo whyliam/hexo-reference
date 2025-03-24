@@ -70,10 +70,15 @@ function renderFootnotes(text) {
     // loop all alias footnotes, update and leave index
     text = text.replace(reAliasFootnote, function (match, alias) {
         if (aliasMap.hasOwnProperty(alias)) {
-            aliasMap[alias].index = ++global_index;
+            // 检查是否已经有索引，如果没有才分配新索引
+            if (!aliasMap[alias].hasOwnProperty('index')) {
+                aliasMap[alias].index = ++global_index;
+            }
+            // 返回已分配的索引
+            return '[^' + aliasMap[alias].index + ']';
         }
-        // return as footnote index
-        return '[^' + global_index + ']';
+        // 如果找不到别名，返回空字符串
+        return '';
     });
 
     var indexMap = createLookMap("index")
