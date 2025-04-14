@@ -1,11 +1,23 @@
 {
-    "extends" : "../.eslintrc.json",
-    "env"     : {
-        "mocha" : true
-    },
-    "globals" : {
-        "expect" : false,
-        "should" : false,
-        "sinon"  : false
+  "extends": "../.eslintrc.json",
+  "env": {
+    "mocha": true,
+    "node": true
+  },
+  "globals": {
+    "expect": "readonly",
+    "should": "readonly",
+    "sinon": "readonly"
+  },
+  "rules": {
+    "no-unused-expressions": "off"
+  },
+  "overrides": [
+    {
+      "files": ["*.test.js", "*.spec.js"],
+      "rules": {
+        "max-nested-callbacks": "off"
+      }
     }
+  ]
 }

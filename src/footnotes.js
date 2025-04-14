@@ -13,8 +13,6 @@ var md = require('markdown-it')({
 function renderFootnotes(text) {
     var footnotes = [];
     var reFootnoteContent = /\[\^(\w+)\]: ?([\S\s]+?)(?=\[\^(?:\d+)\]|\n\n|$)/g;
-    var reInlineFootnote = /\[\^(\w+)\]\((.+?)\)/g;
-    var reAliasFootnote = /\[\^(\w+)\]/g;
     var reFootnoteIndex = /\[\^(\d+)\]/g;
 
     var html = '';
@@ -47,46 +45,30 @@ function renderFootnotes(text) {
 
     // firstly collect and clear all footnote contents 匹配脚注定义（如 [^alias]: content）。
     text = text.replace(reFootnoteContent, function (match, alias, content) {
+        // 直接分配索引号
+        global_index++;
         footnotes.push({
             alias: alias,
-            content: content
+            content: content,
+            index: global_index
         });
         // remove footnote content
         return '';
     });
 
-    // loop all inline footnotes, convert to alias style 匹配内联脚注（如 [^alias](content)）。
-    text = text.replace(reInlineFootnote, function (match, alias, content) {
-        footnotes.push({
-            alias: alias,
-            content: content
-        });
-        // remove content of inline footnote, return as footnote index
-        return '[^' + alias + ']';
-    });
-
-    var aliasMap = createLookMap("alias")
-
-    // loop all alias footnotes, update and leave index 匹配脚注引用（如 [^alias]）。
-    text = text.replace(reAliasFootnote, function (match, alias) {
-        if (aliasMap.hasOwnProperty(alias)) {
-            // 检查是否已经有索引，如果没有才分配新索引
-            if (!aliasMap[alias].hasOwnProperty('index')) {
-                aliasMap[alias].index = ++global_index;
-            }
-            // 返回已分配的索引
-            return '[^' + aliasMap[alias].index + ']';
-        }
-        // 如果找不到别名，返回空字符串
-        return '';
-    });
-
-    var indexMap = createLookMap("index")
+    // 创建索引映射，使用索引值作为键
+    var indexMap = {};
+    for (var i = 0; i < footnotes.length; i++) {
+        indexMap[footnotes[i].index] = footnotes[i];
+    }
 
     // render (HTML) footnotes reference 匹配脚注索引（如 [^index]）。
     text = text.replace(reFootnoteIndex, 
         function(match, index){
-            if (!indexMap.hasOwnProperty(index) || !indexMap[index].hasOwnProperty("content")) {
+            if (!indexMap.hasOwnProperty(index)) {
+                return '';
+            }
+            if (!indexMap[index].hasOwnProperty("content")) {
                 return ''
             }
 
@@ -99,14 +81,6 @@ function renderFootnotes(text) {
                 + renderedTooltip +
                 '">[' + index +']</span></a></sup>';
     });
-
-    // delete the footnotes that only has footnote-detail but no mark in text (no index).
-    var i = footnotes.length;
-    while(i--) {
-        if (!footnotes[i].hasOwnProperty("index")) {
-            footnotes.splice(i, 1)
-        }
-    }
 
     // sort footnotes by their index
     footnotes.sort(function (a, b) {
