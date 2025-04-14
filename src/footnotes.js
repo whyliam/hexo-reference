@@ -77,7 +77,7 @@ function renderFootnotes(text) {
             var renderedTooltip = md.renderInline(tooltip.trim()).replace(/<[^>]*>/g, '');
             return '<sup id="fnref:' + index + '">' +
                 '<a href="#fn:'+ index +'" rel="footnote">' +
-                '<span class="hint--top hint--error hint--medium hint--rounded hint--bounce" aria-label="'
+                '<span class="hint--top hint--error hint--medium hint--rounded hint--bounce mobile-tooltip-disabled" aria-label="'
                 + renderedTooltip +
                 '">[' + index +']</span></a></sup>';
     });
@@ -93,7 +93,7 @@ function renderFootnotes(text) {
         html += '<span style="display: inline-block; vertical-align: top; padding-right: 10px; margin-left: -40px">';
         html += footNote.index;
         html += '.</span>';
-        html += '<span style="display: inline-block; vertical-align: top; margin-left: 10px;">';
+        html += '<span style="display: inline-block; vertical-align: top; margin-left: 10px;display: contents;">';
         html += md.renderInline(footNote.content.trim());
         html += '<a href="#fnref:' + footNote.index + '" rev="footnote"> ↩</a></span></li>';
     });
@@ -105,6 +105,7 @@ function renderFootnotes(text) {
             text += '<style>';
             text += '@media (max-width: 767px) {';
             text += '[class*=hint--]:after, [class*=hint--]:before { display: none !important; }';
+            text += '.mobile-tooltip-disabled:after, .mobile-tooltip-disabled:before { display: none !important; }';
             text += '}';
             text += '</style>';
         }
