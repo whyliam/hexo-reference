@@ -45,7 +45,7 @@ function renderFootnotes(text) {
         return map
     }
 
-    // firstly collect and clear all footnote contents
+    // firstly collect and clear all footnote contents 匹配脚注定义（如 [^alias]: content）。
     text = text.replace(reFootnoteContent, function (match, alias, content) {
         footnotes.push({
             alias: alias,
@@ -55,7 +55,7 @@ function renderFootnotes(text) {
         return '';
     });
 
-    // loop all inline footnotes, convert to alias style
+    // loop all inline footnotes, convert to alias style 匹配内联脚注（如 [^alias](content)）。
     text = text.replace(reInlineFootnote, function (match, alias, content) {
         footnotes.push({
             alias: alias,
@@ -67,7 +67,7 @@ function renderFootnotes(text) {
 
     var aliasMap = createLookMap("alias")
 
-    // loop all alias footnotes, update and leave index
+    // loop all alias footnotes, update and leave index 匹配脚注引用（如 [^alias]）。
     text = text.replace(reAliasFootnote, function (match, alias) {
         if (aliasMap.hasOwnProperty(alias)) {
             // 检查是否已经有索引，如果没有才分配新索引
@@ -83,8 +83,8 @@ function renderFootnotes(text) {
 
     var indexMap = createLookMap("index")
 
-    // render (HTML) footnotes reference
-    text = text.replace(reFootnoteIndex,
+    // render (HTML) footnotes reference 匹配脚注索引（如 [^index]）。
+    text = text.replace(reFootnoteIndex, 
         function(match, index){
             if (!indexMap.hasOwnProperty(index) || !indexMap[index].hasOwnProperty("content")) {
                 return ''

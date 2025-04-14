@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/kchen0x/hexo-reference.git"
+    "url": "https://github.com/whyliam/hexo-reference"
   },
   "keywords": [
     "hexo",
@@ -22,19 +22,19 @@
   "author": "xiongziq",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kchen0x/hexo-reference/issues"
+    "url": "https://github.com/whyliam/hexo-reference/issues"
   },
-  "homepage": "https://github.com/kchen0x/hexo-reference#readme",
+  "homepage": "https://github.com/whyliam/hexo-reference#readme",
   "devDependencies": {
-    "chai": "^3.5.0",
-    "coveralls": "^2.11.14",
-    "eslint-config-google": "^0.7.0",
+    "chai": "^5.2.0",
+    "coveralls": "^3.1.1",
+    "eslint-config-google": "^0.14.0",
     "istanbul": "^0.4.5",
-    "mocha": "^3.1.2",
-    "mocha-lcov-reporter": "^1.2.0"
+    "mocha": "^11.1.0",
+    "mocha-lcov-reporter": "^1.3.0"
   },
   "dependencies": {
-    "markdown-it": "^12.3.2",
-    "hexo-util": "^0.6.3"
+    "markdown-it": "^14.1.0",
+    "hexo-util": "^3.3.0"
   }
 }
