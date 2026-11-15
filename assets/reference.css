@@ -1,0 +1,23 @@
+.footnotes { margin-top: 2rem; font-size: .9em; }
+.footnotes li { margin: .5em 0; }
+.mobile-tooltip-disabled { position: relative; }
+@media (hover: hover) and (min-width: 768px) {
+  .mobile-tooltip-disabled:hover::after,
+  a:focus-visible > .mobile-tooltip-disabled::after {
+    content: attr(aria-label);
+    position: absolute;
+    bottom: calc(100% + .5rem);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    width: max-content;
+    max-width: min(24rem, 80vw);
+    white-space: normal;
+    padding: .5rem .75rem;
+    border-radius: .4rem;
+    background: #333;
+    color: #fff;
+    font: 400 .85rem/1.5 sans-serif;
+    box-shadow: 0 2px 8px #0003;
+  }
+}
