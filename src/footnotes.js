@@ -1,118 +1,53 @@
 'use strict';
 
-var md = require('markdown-it')({
-    // allow HTML tags
-    html: true
-});
+const md = require('markdown-it')({html: true});
+const mobileStyle = '<style>@media (max-width: 767px) {' +
+  '.mobile-tooltip-disabled:after, .mobile-tooltip-disabled:before { display: none !important; }' +
+  '}</style>';
 
-/**
- * Render markdown footnotes
- * @param {String} text
- * @returns {String} text
- */
-function renderFootnotes(text) {
-    var footnotes = [];
-    var reFootnoteContent = /\[\^(\w+)\]: ?([\S\s]+?)(?=\[\^(?:\d+)\]|\n\n|$)/g;
-    var reFootnoteIndex = /\[\^(\d+)\]/g;
-
-    var html = '';
-    var global_index = 0;
-    
-    // 添加响应式样式，只在第一次调用时添加
-    var styleInjected = false;
-    if (!global.footnoteStyleInjected) {
-        html += '<style>';
-        html += '@media (max-width: 767px) {';
-        html += '[class*=hint--]:after, [class*=hint--]:before { display: none !important; }';
-        html += '}';
-        html += '</style>';
-        global.footnoteStyleInjected = true;
-        styleInjected = true;
-    }
-
-    // create map for looking footnotes array
-    function createLookMap(field) {
-        var map = {}
-        for (var i = 0; i < footnotes.length; i++) {
-            var item = footnotes[i]
-            if (field in item) {
-                var key = item[field]
-                map[key] = item
-            }
-        }
-        return map
-    }
-
-    // firstly collect and clear all footnote contents 匹配脚注定义（如 [^alias]: content）。
-    text = text.replace(reFootnoteContent, function (match, alias, content) {
-        // 直接分配索引号
-        global_index++;
-        footnotes.push({
-            alias: alias,
-            content: content,
-            index: global_index
-        });
-        // remove footnote content
-        return '';
-    });
-
-    // 创建索引映射，使用索引值作为键
-    var indexMap = {};
-    for (var i = 0; i < footnotes.length; i++) {
-        indexMap[footnotes[i].index] = footnotes[i];
-    }
-
-    // render (HTML) footnotes reference 匹配脚注索引（如 [^index]）。
-    text = text.replace(reFootnoteIndex, 
-        function(match, index){
-            if (!indexMap.hasOwnProperty(index)) {
-                return '';
-            }
-            if (!indexMap[index].hasOwnProperty("content")) {
-                return ''
-            }
-
-            var tooltip = indexMap[index].content;
-            // 先渲染 markdown 为 HTML，然后去除 HTML 标签，只保留文本内容
-            var renderedTooltip = md.renderInline(tooltip.trim()).replace(/<[^>]*>/g, '');
-            return '<sup id="fnref:' + index + '">' +
-                '<a href="#fn:'+ index +'" rel="footnote">' +
-                '<span class="hint--top hint--error hint--medium hint--rounded hint--bounce mobile-tooltip-disabled" aria-label="'
-                + renderedTooltip +
-                '">[' + index +']</span></a></sup>';
-    });
-
-    // sort footnotes by their index
-    footnotes.sort(function (a, b) {
-        return a.index - b.index;
-    });
-
-    // render footnotes (HTML)
-    footnotes.forEach(function (footNote) {
-        html += '<li id="fn:' + footNote.index + '">';
-        html += '<span style="display: inline-block; vertical-align: top; padding-right: 10px; margin-left: -40px">';
-        html += footNote.index;
-        html += '.</span>';
-        html += '<span style="display: inline-block; vertical-align: top; margin-left: 10px;display: contents;">';
-        html += md.renderInline(footNote.content.trim());
-        html += '<a href="#fnref:' + footNote.index + '" rev="footnote"> ↩</a></span></li>';
-    });
-
-    // add footnotes at the end of the content
-    if (footnotes.length) {
-        text += '<div id="footnotes">';
-        if (!styleInjected) {
-            text += '<style>';
-            text += '@media (max-width: 767px) {';
-            text += '[class*=hint--]:after, [class*=hint--]:before { display: none !important; }';
-            text += '.mobile-tooltip-disabled:after, .mobile-tooltip-disabled:before { display: none !important; }';
-            text += '}';
-            text += '</style>';
-        }
-        text += '<div id="footnotelist">';
-        text += '<ol style="list-style: none; padding-left: 0; margin-left: 40px">' + html + '</ol>';
-        text += '</div></div>';
-    }
-    return text;
+function escapeAttribute(text) {
+  return text.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
-module.exports = renderFootnotes;
+
+module.exports = function renderFootnotes(text) {
+  if (typeof text !== 'string') return text;
+  const notes = new Map();
+  // Definitions can span lines, ending at the next definition or blank line.
+  text = text.replace(/\[\^(\w+)\]:[ \t]*([\s\S]+?)(?=\[\^\w+\]:|\n\s*\n|$)/g,
+    (match, alias, content) => {
+      if (!notes.has(alias)) notes.set(alias, {content});
+      return '';
+    });
+  text = text.replace(/\[\^(\w+)\]\(([^)\n]*)\)/g, (match, alias, content) => {
+    if (!notes.has(alias)) notes.set(alias, {content});
+    return `[^${alias}]`;
+  });
+  const used = new Set([...notes.keys()].filter(key => /^\d+$/.test(key)));
+  let next = 1;
+  for (const [alias, note] of notes) {
+    while (used.has(String(next))) next++;
+    note.index = /^\d+$/.test(alias) ? alias : String(next++);
+    note.references = 0;
+  }
+  text = text.replace(/\[\^(\w+)\]/g, (match, alias) => {
+    const note = notes.get(alias);
+    if (!note) return match;
+    note.references++;
+    const id = note.index;
+    const reference = `fnref:${id}` + (note.references > 1 ? `-${note.references}` : '');
+    const tooltip = escapeAttribute(md.renderInline(note.content.trim()).replace(/<[^>]*>/g, ''));
+    return `<sup id="${reference}"><a href="#fn:${id}" rel="footnote">` +
+      '<span class="hint--top hint--error hint--medium hint--rounded hint--bounce mobile-tooltip-disabled"' +
+      ` aria-label="${tooltip}">[${id}]</span></a></sup>`;
+  });
+  if (!notes.size) return text;
+  const items = [...notes.values()].map(note => {
+    const id = note.index;
+    return `<li id="fn:${id}"><span style="display: inline-block; vertical-align: top; padding-right: 10px; margin-left: -40px">${id}.</span>` +
+      '<span style="display: inline-block; vertical-align: top; margin-left: 10px;display: contents;">' +
+      md.renderInline(note.content.trim()) + `<a href="#fnref:${id}" rev="footnote"> ↩</a></span></li>`;
+  }).join('');
+  return text + '<div id="footnotes">' + mobileStyle + '<div id="footnotelist">' +
+    '<ol style="list-style: none; padding-left: 0; margin-left: 40px">' + items + '</ol></div></div>';
+};

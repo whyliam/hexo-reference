@@ -1,3 +1,5 @@
+> Maintained fork: `@whyliam/hexo-reference`. Requires Node.js >=20.19. Install only one fork/upstream implementation at a time.
+
 # hexo-reference
 
 A plugin to support markdown footnotes and Wiki-Style tooltip reference in your Hexo blog posts.
@@ -5,7 +7,7 @@ A plugin to support markdown footnotes and Wiki-Style tooltip reference in your 
 ## Installation
 
 ```
-npm install hexo-reference --save
+npm install hexo-reference@npm:@whyliam/hexo-reference --save
 ```
 
 If Hexo detect automatically all plugins, that's all.  
@@ -13,7 +15,7 @@ If Hexo detect automatically all plugins, that's all.
 If that is not the case, register the plugin in your `_config.yml` file :
 ```
 plugins:
-  - hexo-reference
+  - "@whyliam/hexo-reference"
 ```
 
 ## Syntax
@@ -35,3 +37,9 @@ content
 
 ### Output
 ![footnotes](http://rw920d1od.hd-bkt.clouddn.com/hexo/footnote.png)
+
+For automatic Hexo plugin discovery, install with an alias:
+
+```sh
+npm install hexo-reference@npm:@whyliam/hexo-reference
+```
